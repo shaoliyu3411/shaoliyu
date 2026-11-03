@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的世界 · Minecraft</title>
+<style>
+:root{
+  --grass:#7CBD56; --grass-d:#5D9C3F; --dirt:#8B5A2B;
+  --stone:#7F7F7F; --diamond:#4AEDD9; --gold:#FCEE4B;
+  --bg:#161616; --panel:#262626; --text:#E8E8E8; --dim:#9A9A9A;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Courier New","PingFang SC","Microsoft YaHei",monospace;
+  background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden;
+}
+/* 背景网格 */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+/* 导航 */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;background:rgba(22,22,22,.88);
+  backdrop-filter:blur(8px);border-bottom:3px solid #000;
+}
+.logo{font-weight:bold;color:var(--grass);letter-spacing:.1em;font-size:15px}
+.nav nav{display:flex;gap:22px}
+.nav a{
+  color:var(--dim);text-decoration:none;font-size:14px;
+  padding:4px 2px;border-bottom:3px solid transparent;transition:.2s;
+}
+.nav a:hover{color:var(--grass);border-bottom-color:var(--grass)}
+
+/* Hero */
+.hero{
+  position:relative;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:100px 20px 60px;
+  background:
+    radial-gradient(ellipse at 50% 0%,#2d4d20 0%,transparent 62%),
+    linear-gradient(#1c1c1c,#161616);
+}
+.hero h1{
+  font-size:clamp(44px,9vw,92px);letter-spacing:.08em;color:#fff;
+  text-shadow:0 4px 0 var(--grass-d),0 8px 0 #000,0 0 50px rgba(124,189,86,.45);
+}
+.hero .sub{
+  margin-top:18px;color:var(--dim);letter-spacing:.28em;
+  font-size:clamp(11px,2.4vw,15px);
+}
+.hero .btn{margin-top:44px}
+
+/* MC 风格按钮 */
+.btn{
+  display:inline-block;padding:14px 36px;background:#6B6B6B;color:#fff;
+  text-decoration:none;font-size:15px;letter-spacing:.12em;font-weight:bold;
+  border:3px solid #000;cursor:pointer;font-family:inherit;
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),
+             inset 4px 4px 0 rgba(255,255,255,.22),
+             0 6px 0 #000;
+  transition:background .15s, transform .08s;
+}
+.btn:hover{background:var(--grass-d)}
+.btn:active{transform:translateY(4px);
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),
+             inset 4px 4px 0 rgba(255,255,255,.22),
+             0 2px 0 #000;}
+
+/* 浮动方块 */
+.float{
+  position:absolute;width:54px;height:54px;border:3px solid #000;
+  animation:floaty 7s ease-in-out infinite;opacity:.9;
+}
+@keyframes floaty{
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(-26px) rotate(7deg)}
+}
+
+/* 区块 */
+section{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:90px 24px}
+.sec-title{
+  font-size:clamp(26px,5vw,40px);text-align:center;
+  letter-spacing:.05em;margin-bottom:10px;
+}
+.sec-title span{color:var(--grass)}
+.sec-sub{text-align:center;color:var(--dim);font-size:14px;margin-bottom:48px}
+
+/* 卡片通用 */
+.card{
+  background:var(--panel);border:3px solid #000;padding:26px;
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3),
+             inset 4px 4px 0 rgba(255,255,255,.055);
+}
+
+/* 关于 */
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.about-grid .card{text-align:center}
+.about-grid .num{font-size:34px;color:var(--grass);font-weight:bold;letter-spacing:.02em}
+.about-grid .label{color:var(--dim);font-size:13px;margin-top:6px}
+
+/* 方块图鉴 */
+.blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:18px}
+.block-card{
+  background:var(--panel);border:3px solid #000;padding:18px;text-align:center;
+  cursor:pointer;
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3);
+  transition:transform .12s, box-shadow .12s;
+}
+.block-card:hover{transform:translateY(-4px);
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3),0 8px 0 #000}
+.block-card:active{transform:translateY(0);
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,.3),0 2px 0 #000}
+.cube{
+  width:64px;height:64px;margin:0 auto 14px;border:3px solid #000;
+  image-rendering:pixelated;
+}
+.block-card .name{font-size:14px;font-weight:bold}
+.block-card .hint{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* 各种方块纹理 */
+.cube-grass{background:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 4px,transparent 4px 8px),
+  repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 4px,transparent 4px 8px),
+  linear-gradient(#5D9C3F 0 24%,#7CBD56 24% 30%,#8B5A2B 30% 100%);}
+.cube-stone{background:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0 4px,transparent 4px 8px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 4px,transparent 4px 8px),
+  #7F7F7F;}
+.cube-diamond{background:
+  radial-gradient(circle at 22% 26%,#4AEDD9 0 6px,transparent 6px),
+  radial-gradient(circle at 70% 40%,#4AEDD9 0 7px,transparent 7px),
+  radial-gradient(circle at 40% 74%,#4AEDD9 0 6px,transparent 6px),
+  radial-gradient(circle at 82% 82%,#4AEDD9 0 4px,transparent 4px),
+  #7F7F7F;}
+.cube-wood{background:
+  repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 5px,transparent 5px 11px),
+  linear-gradient(90deg,#6B4A22,#8B5A2B 40%,#6B4A22 100%);}
+.cube-water{background:
+  repeating-linear-gradient(0deg,rgba(255,255,255,.13) 0 3px,transparent 3px 10px),
+  linear-gradient(160deg,#2E6FB7,#3B8EDB);}
+.cube-gold{background:
+  radial-gradient(circle at 30% 30%,#FFE94D 0 6px,transparent 6px),
+  radial-gradient(circle at 72% 52%,#FFE94D 0 5px,transparent 5px),
+  radial-gradient(circle at 46% 80%,#FFE94D 0 5px,transparent 5px),
+  #A88B2A;}
+
+/* 生物 */
+.mobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.mob{display:flex;gap:14px;align-items:flex-start}
+.mob .emoji{font-size:34px;line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.6))}
+.mob .m-name{font-weight:bold;font-size:15px}
+.mob .m-desc{font-size:12.5px;color:var(--dim);line-height:1.6}
+
+/* 时间线 */
+.timeline{position:relative;padding-left:26px;border-left:3px solid #000;max-width:640px;margin:0 auto}
+.tl-item{position:relative;margin-bottom:30px}
+.tl-item:last-child{margin-bottom:0}
+.tl-item::before{
+  content:"";position:absolute;left:-36px;top:7px;width:12px;height:12px;
+  background:var(--grass);border:3px solid #000;
+}
+.tl-item .ver{color:var(--grass);font-weight:bold;font-size:14px;letter-spacing:.05em}
+.tl-item .desc{font-size:13.5px;color:var(--dim)}
+
+/* 页脚 */
+footer{
+  position:relative;z-index:1;text-align:center;padding:44px 20px;
+  border-top:3px solid #000;color:var(--dim);font-size:12.5px;
+  background:#111;
+}
+
+/* Toast */
+.toast{
+  position:fixed;left:50%;bottom:32px;z-index:300;
+  transform:translate(-50%,150%);
+  background:#000;border:3px solid var(--grass);color:#fff;
+  padding:14px 26px;font-size:13.5px;max-width:88vw;text-align:center;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.2);
+  box-shadow:0 6px 0 rgba(0,0,0,.6);
+}
+.toast.show{transform:translate(-50%,0)}
+
+/* 滚动淡入 */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s,transform .6s}
+.reveal.show{opacity:1;transform:none}
+
+/* 移动端 */
+@media (max-width:640px){
+  .nav{padding:12px 16px}
+  .nav nav{gap:14px}
+  .nav a{font-size:12.5px}
+  .float{width:38px;height:38px}
+  section{padding:70px 18px}
+}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<header class="nav">
+  <div class="logo">⛏ MINECRAFT</div>
+  <nav>
+    <a href=" ">关于</a >
+    <a href="#blocks">方块</a >
+    <a href="#mobs">生物</a >
+    <a href="#versions">版本</a >
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero" style="max-width:none">
+  <div class="float cube-grass" style="top:18%;left:12%;animation-delay:0s"></div>
+  <div class="float cube-diamond" style="top:26%;right:14%;animation-delay:1.2s"></div>
+  <div class="float cube-wood" style="bottom:22%;left:18%;animation-delay:2.1s"></div>
+  <div class="float cube-gold" style="bottom:16%;right:20%;animation-delay:.6s"></div>
+
+  <h1>我的世界</h1>
+  <p class="sub">M I N E C R A F T</p >
+  <a href="#blocks" class="btn">开始探索</a >
+</section>
+
+<!-- 关于 -->
+<section id="about">
+  <h2 class="sec-title">关于 <span>Minecraft</span></h2>
+  <p class="sec-sub">一个由方块组成的无限世界</p >
+
+  <div class="about-grid reveal">
+    <div class="card">
+      <div class="num">3亿+</div>
+      <div class="label">全球累计销量（份）</div>
+    </div>
+    <div class="card">
+      <div class="num">2011</div>
+      <div class="label">正式版 1.0 发布年份</div>
+    </div>
+    <div class="card">
+      <div class="num">3</div>
+      <div class="label">主世界 / 下界 / 末地</div>
+    </div>
+    <div class="card">
+      <div class="num">Mojang</div>
+      <div class="label">开发团队（微软旗下）</div>
+    </div>
+  </div>
+
+  <div class="card reveal" style="margin-top:22px">
+    <p style="font-size:14.5px">
+      《我的世界》是一款沙盒生存建造游戏。玩家在一个由方块构成的开放世界里
+      <span style="color:var(--grass)">挖掘、合成、建造、探索</span>，
+      既可以白天砍树盖房，也可以夜晚在下界与末地挑战 Boss。
+      没有固定剧情，你想怎么玩，世界就长什么样。
+    </p >
+  </div>
+</section>
+
+<!-- 方块图鉴 -->
+<section id="blocks">
+  <h2 class="sec-title">方块 <span>图鉴</span></h2>
+  <p class="sec-sub">点击方块查看介绍</p >
+
+  <div class="blocks reveal">
+    <div class="block-card" data-info="草方块：游戏中最具标志性的方块。用镐挖会掉落泥土，是搭建家园的基础。">
+      <div class="cube cube-grass"></div>
+      <div class="name">草方块</div>
+      <div class="hint">点击查看</div>
+    </div>
+    <div class="block-card" data-info="石头：用木镐及以上才能挖取。烧炼后变成平滑石头，是建筑主力材料。">
+      <div class="cube cube-stone"></div>
+      <div class="name">石头</div>
+      <div class="hint">点击查看</div>
+    </div>
+    <div class="block-card" data-info="钻石矿：生成于 Y=-64 至 16 之间，越深越常见。挖到它意味着你进入了游戏中段。">
+      <div class="cube cube-diamond"></div>
+      <div class="name">钻石矿</div>
+      <div class="hint">点击查看</div>
+    </div>
+    <div class="block-card" data-info="木头：一切的开端。徒手即可采集，能合成木板、木棍、工作台和第一把木镐。">
+      <div class="cube cube-wood"></div>
+      <div class="name">木头</div>
+      <div class="hint">点击查看</div>
+    </div>
+    <div class="block-card" data-info="水：可以无限取用（两桶水可造无限水源）。用于灌溉农田、制作水梯和刷怪塔。">
+      <div class="cube cube-water"></div>
+      <div class="name">水</div>
+      <div class="hint">点击查看</div>
+    </div>
+    <div class="block-card" data-info="金矿：主要分布在下界与主世界深处。可制作金苹果、动力铁轨，也是猪灵的交易货币。">
+      <div class="cube cube-gold"></div>
+      <div class="name">金矿</div>
+      <div class="hint">点击查看</div>
+    </div>
+  </div>
+</section>
+
+<!-- 生物 -->
+<section id="mobs">
+  <h2 class="sec-title">常见 <span>生物</span></h2>
+  <p class="sec-sub">白天与夜晚，世界从不安静</p >
+
+  <div class="mobs reveal">
+    <div class="card mob">
+      <div class="emoji">💥</div>
+      <div>
+        <div class="m-name">苦力怕 Creeper</div>
+        <div class="m-desc">Minecraft 的吉祥物。悄悄靠近后自爆，是无数玩家的心理阴影。</div>
+      </div>
+    </div>
+    <div class="card mob">
+      <div class="emoji">🧟</div>
+      <div>
+        <div class="m-name">僵尸 Zombie</div>
+        <div class="m-desc">夜晚最常见的敌对生物，会成群出现，也会攻击村民。</div>
+      </div>
+    </div>
+    <div class="card mob">
+      <div class="emoji">🕴️</div>
+      <div>
+        <div class="m-name">末影人 Enderman</div>
+        <div class="m-desc">会瞬移的高个子。千万别直视它的眼睛，否则它会追着你打。</div>
+      </div>
+    </div>
+    <div class="card mob">
+      <div class="emoji">🧑‍🌾</div>
+      <div>
+        <div class="m-name">村民 Villager</div>
+        <div class="m-desc">交易系统的核心。用绿宝石换附魔书、工具和稀有物品。</div>
+      </div>
+    </div>
+    <div class="card mob">
+      <div class="emoji">🐑</div>
+      <div>
+        <div class="m-name">羊 Sheep</div>
+        <div class="m-desc">羊毛与羊肉的来源。用剪刀可以反复采集羊毛。</div>
+      </div>
+    </div>
+    <div class="card mob">
+      <div class="emoji">🐷</div>
+      <div>
+        <div class="m-name">猪 Pig</div>
+        <div class="m-desc">最经典的食物来源之一，装上鞍后还能骑。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 版本 -->
+<section id="versions">
+  <h2 class="sec-title">版本 <span>时间线</span></h2>
+  <p class="sec-sub">每一次更新，都是一次世界扩张</p >
+
+  <div class="timeline reveal">
+    <div class="tl-item">
+      <div class="ver">1.0 · 冒险更新 · 2011</div>
+      <div class="desc">正式版发布，末地与末影龙登场，游戏有了“结局”。</div>
+    </div>
+    <div class="tl-item">
+      <div class="ver">1.9 · 战斗更新 · 2016</div>
+      <div class="desc">重做战斗系统，加入盾牌与双持，末地城与潜影盒出现。</div>
+    </div>
+    <div class="tl-item">
+      <div class="ver">1.13 · 海洋更新 · 2018</div>
+      <div class="desc">海底世界全面重做，加入海龟、珊瑚、沉船与三叉戟。</div>
+    </div>
+    <div class="tl-item">
+      <div class="ver">1.16 · 下界更新 · 2020</div>
+      <div class="desc">下界彻底翻新，新增四种生物群系与猪灵交易系统。</div>
+    </div>
+    <div class="tl-item">
+      <div class="ver">1.18 · 洞穴与山崖 · 2021–2022</div>
+      <div class="desc">地形生成重写，洞穴更深、山脉更高，世界高度扩展到 Y=320。</div>
+    </div>
+    <div class="tl-item">
+      <div class="ver">1.20 · 足迹与故事 · 2023</div>
+      <div class="desc">樱花树林、考古系统与盔甲纹饰，建筑党狂喜。</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  ⛏ 这是一个 Minecraft 主题的练习网页 · 用 HTML + CSS + JavaScript 手写<br>
+  与 Mojang Studios / Microsoft 无关，仅作学习演示
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 点击方块弹出说明 =====
+const toast = document.getElementById('toast');
+let toastTimer = null;
+
+function showToast(text) {
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+document.querySelectorAll('.block-card').forEach(card => {
+  card.addEventListener('click', () => {
+    showToast(card.dataset.info);
+  });
+});
+
+// ===== 滚动淡入 =====
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('show');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ===== 导航平滑跳转（兼容旧浏览器） =====
+document.querySelectorAll('.nav a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+});
+</script>
+</body>
+</html>
